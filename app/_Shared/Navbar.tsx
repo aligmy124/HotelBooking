@@ -7,9 +7,10 @@ import { useState } from "react";
 import { useAuth } from "../_Context/Authentication";
 import userName from "./../../assets/images/Username.png"
 import Image from "next/image";
-
+import {useRouter} from "next/navigation"
 export default function Navbar() {
   const pathname = usePathname();
+  const router=useRouter();
   const [openBar, setOpenBar] = useState(false);
   const [userBar, setUserBar] = useState(false);
   const { isLogin, logout } = useAuth();
@@ -38,10 +39,10 @@ export default function Navbar() {
 
             {!isLogin && (
               <>
-                <Link href="/stories" className={isActive("/stories")}>
+                <Link href="/Auth/Register" className="px-4 py-2 text-white rounded-lg bg-[#3252Df]">
                   Register
                 </Link>
-                <Link href="/Auth/Login" className={isActive("/Auth/Login")}>
+                <Link href="/Auth/Login"  className="px-4 py-2 text-white rounded-lg bg-[#3252DF]">
                   Login
                 </Link>
               </>
@@ -96,10 +97,10 @@ export default function Navbar() {
 
             {!isLogin && (
               <>
-                <Link href="/stories" className={isActive("/stories")} onClick={() => setOpenBar(false)}>
+                <Link href="/Auth/Register" className="px-4 py-2 text-white rounded-lg bg-[#3252Df]" onClick={() => setOpenBar(false)}>
                   Register
                 </Link>
-                <Link href="/Auth/Login" className={isActive("/Auth/Login")} onClick={() => setOpenBar(false)}>
+                <Link href="/Auth/Login" className="px-4 py-2 text-white rounded-lg bg-[#3252Df]" onClick={() => setOpenBar(false)}>
                   Login
                 </Link>
               </>
