@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
@@ -84,6 +83,12 @@ export default function AdsDetails() {
       return alert("Please select start and end date");
 
     if (!ads?.room._id) return alert("Room not found");
+
+    if(!token){
+      router.push("/Auth/Login")
+      toast.error("Unauthorized");
+      return;
+    }
 
     const payload = {
       startDate: format(range.from, "yyyy-MM-dd"),
@@ -339,7 +344,7 @@ export default function AdsDetails() {
 
                 <button
                   onClick={handleCreateBooking}
-                  className="w-full bg-[#3252DF] text-white py-3 rounded-lg"
+                  className="w-full cursor-pointer bg-[#3252DF] text-white py-3 rounded-lg"
                 >
                   Confirm Booking
                 </button>

@@ -88,7 +88,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-
   // Login Form Component
   const LoginForm = (
     <Box sx={{ width: "100%" }}>

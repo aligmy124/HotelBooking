@@ -18,9 +18,6 @@ export default function Home() {
     }
   }, [isLogin, router]); // ✅ depend on isLogin
 
-  // لو isLogin لسه مش محمل نعرض loader أو null
-  if (isLogin === undefined) return null;
-
   return (
     <>
       {(!isLogin || isLogin.role === "user") && (

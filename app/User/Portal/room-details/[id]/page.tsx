@@ -1,5 +1,6 @@
 "use client";
 import {
+  PORTAL_BOOKING_ENDPOINTS,
   PORTAL_COMMENT_ENDPOINTS,
   PORTAL_REVIEW_ENDPOINTS,
   PORTAL_ROOMS_ENDPOINTS,
@@ -72,6 +73,7 @@ export default function page() {
       setLoading(false);
     }
   };
+
   const price = roomData?.price ?? 0;
   const discount = roomData?.discount ?? 0;
 
@@ -84,6 +86,49 @@ export default function page() {
           "dd MMM yyyy",
         )}`
       : "";
+
+      // create Booking
+        const handleCreateBooking = async () => {
+          if (!range?.from || !range?.to)
+            return alert("Please select start and end date");
+      
+          if (!roomData?._id) return alert("Room not found");
+      
+          if(!token){
+            router.push("/Auth/Login")
+            toast.error("Unauthorized");
+            return;
+          }
+      
+          const payload = {
+            startDate: format(range.from, "yyyy-MM-dd"),
+            endDate: format(range.to, "yyyy-MM-dd"),
+            totalPrice: Math.round(finalPrice),
+            room:roomData?._id,
+          };
+      
+          try {
+            const res = await axios.post(
+              PORTAL_BOOKING_ENDPOINTS.createBooking,
+              payload,
+              {
+                headers: {
+                  Authorization: `${token}`,
+                },
+              },
+            );
+      
+            console.log("Booking created:", res.data);
+      
+            // 👉 بعد ما الـ booking يتعمل بنجاح
+            router.push(`/User/stripePayment/${res.data.data.booking._id}`);
+          } catch (error: any) {
+            console.error(
+              "Create booking failed:",
+              error.response?.data || error.message,
+            );
+          }
+        };
 
   /*****************Review****************** */
 
@@ -307,7 +352,7 @@ export default function page() {
                   </span>
                 </p>
 
-                <button className="w-full bg-[#3252DF] text-white py-3 rounded-lg">
+                <button onClick={handleCreateBooking} className="w-full bg-[#3252DF] text-white py-3 rounded-lg">
                   Confirm Booking
                 </button>
               </div>
