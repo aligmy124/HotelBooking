@@ -31,6 +31,7 @@ import {
   Facebook as FacebookIcon
 } from "@mui/icons-material";
 import AuthComponent from "../AuthComponent/AuthComponent";
+import { useAuth } from "@/app/_Context/Authentication";
 
 interface LoginData {
   email: string;
@@ -46,7 +47,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
-
+  const { login } = useAuth(); 
   const {
     register,
     handleSubmit,
@@ -64,7 +65,11 @@ export default function Login() {
       const token = response.data.data.token;
       
       // Save token
-      localStorage.setItem("token", token);
+      // localStorage.setItem("token", token);
+       if (!token) throw new Error("No token received");
+
+      // 👈 استخدم login function لتحديث Context فورًا
+      login(token);
       
       // Decode token
       const decoded = jwtDecode<DecodedToken>(token);

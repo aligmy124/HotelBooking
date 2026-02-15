@@ -13,7 +13,8 @@ export default function Navbar() {
   const router=useRouter();
   const [openBar, setOpenBar] = useState(false);
   const [userBar, setUserBar] = useState(false);
-  const { isLogin, logout } = useAuth();
+  const { isLogin, logout , loading } = useAuth();
+  if (loading) return null;
   const isActive = (path: string) =>
     pathname === path
       ? "text-[#3252DF] font-semibold border-b-2 border-[#3252DF]"
