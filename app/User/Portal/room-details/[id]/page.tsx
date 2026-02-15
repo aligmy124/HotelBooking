@@ -1,0 +1,361 @@
+"use client";
+import {
+  PORTAL_COMMENT_ENDPOINTS,
+  PORTAL_REVIEW_ENDPOINTS,
+  PORTAL_ROOMS_ENDPOINTS,
+} from "@/app/_Api/Api";
+import axios from "axios";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+/* ================= icons ================= */
+import icon1 from "../../../../../assets/images/icon1.png";
+import icon2 from "../../../../../assets/images/icon2.png";
+import icon3 from "../../../../../assets/images/icon3.png";
+import icon4 from "../../../../../assets/images/icon4.png";
+import icon5 from "../../../../../assets/images/icon5.png";
+import icon6 from "../../../../../assets/images/icon6.png";
+import icon7 from "../../../../../assets/images/icon7.png";
+import icon8 from "../../../../../assets/images/icon8.png";
+import { DateRange, DayPicker } from "react-day-picker";
+import { format } from "date-fns";
+import { Calendar, Minus, Plus, Star } from "lucide-react";
+import Loading from "@/app/_Shared/_Loading/Loading";
+import Footer from "@/app/_Shared/Footer/Footer";
+import { toast } from "react-toastify";
+/* ================= ROOM ================= */
+interface Room {
+  _id: string;
+  roomNumber: string;
+  price: number;
+  capacity: number;
+  discount: number;
+  facilities: string[];
+  images: string[];
+  createdAt: string; // ISO Date
+  updatedAt: string; // ISO Date
+}
+
+export default function page() {
+  const { id } = useParams();
+  const [roomData, setRoomData] = useState<Room | null>(null);
+  const [range, setRange] = useState<DateRange>();
+  const [persons, setPersons] = useState(1);
+  const [openCalendar, setOpenCalendar] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const token=localStorage.getItem("token")
+  const router=useRouter();
+  // icons
+  const features = [
+    { icon: icon8, label: "Bedrooms", value: 5 },
+    { icon: icon7, label: "living room", value: 1 },
+    { icon: icon6, label: "bathroom", value: 3 },
+    { icon: icon5, label: "dining room", value: 1 },
+    { icon: icon4, label: "mbp/s", value: 10 },
+    { icon: icon3, label: "unit ready", value: 7 },
+    { icon: icon2, label: "refigrator", value: 2 },
+    { icon: icon1, label: "television", value: 4 },
+  ];
+
+  const getRoomData = async () => {
+    setLoading(true);
+    try {
+      let res = await axios.get(
+        PORTAL_ROOMS_ENDPOINTS.getRoomDetails(id as string),
+      );
+      setRoomData(res.data.data.room);
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const price = roomData?.price ?? 0;
+  const discount = roomData?.discount ?? 0;
+
+  const finalPrice = price * persons * ((100 - discount) / 100);
+
+  const dateValue =
+    range?.from && range?.to
+      ? `${format(range.from, "dd MMM yyyy")} - ${format(
+          range.to,
+          "dd MMM yyyy",
+        )}`
+      : "";
+
+  /*****************Review****************** */
+
+  const [rating, setRating] = useState(0);
+  const [textReview, setTextReview] = useState("");
+  const [textComment, setTextComment] = useState("");
+  // للتفاعل مع النجوم
+  const handleStarClick = (index: number) => {
+    setRating(index + 1); // index يبدأ من 0
+  };
+  const handelReview = async () => {
+    if(!token){
+      router.push("/Auth/Login");
+      return
+    }
+    const payLoad={
+      roomId:roomData?._id,
+      rating:rating,
+      review:textReview
+    }
+    try {
+      let res = await axios.post(PORTAL_REVIEW_ENDPOINTS.createReview,payLoad, {
+        headers: { Authorization: `${token}` },
+      });
+      toast.success("Review created successfully")
+    } catch (error) {
+      console.error(error);
+      toast.error("You have already added a review for this room")
+    }
+  };
+
+  /****************Comment********************* */
+  const handelComment=async()=>{
+    if(!token){
+      router.push("/Auth/Login");
+      return
+    }
+    const payLoad={
+      roomId:roomData?._id,
+      comment:textComment
+    }
+    try {
+      let res=await axios.post(PORTAL_COMMENT_ENDPOINTS.createComment,payLoad,{
+        headers:{Authorization:`${token}`}
+      })
+      toast.success("Comment created successfully")
+    } catch (error) {
+      console.error(error)
+    }
+  }
+  /***************************UseEfect for All******************** */
+  useEffect(() => {
+    if (!id) return;
+    getRoomData();
+  }, [id]);
+  return (
+    <>
+      <section className="max-w-7xl mx-auto px-4 py-10 flex flex-col gap-10">
+        {/* Breadcrumb */}
+        <div className="text-sm flex gap-2 text-gray-400">
+          <Link href="/" className="hover:text-[#152C5B]">
+            Home
+          </Link>
+          <span>/</span>
+          <span className="text-[#152C5B] font-semibold">Room Details</span>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center">
+            <Loading />
+          </div>
+        ) : (
+          <>
+            {/* Title */}
+            <div className="text-center">
+              <h1 className="text-4xl font-semibold text-[#152C5B]">
+                {roomData?.roomNumber}
+              </h1>
+              <p className="text-gray-400 mt-1">Bogor, Indonesia</p>
+            </div>
+
+            {/* Images */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {roomData?.images.map((img, i) => (
+                <div
+                  key={i}
+                  className={`overflow-hidden rounded-xl ${
+                    i === 0 ? "md:col-span-2 md:h-96" : "md:h-44"
+                  }`}
+                >
+                  <Image
+                    src={img}
+                    alt={`Room image ${i + 1}`}
+                    width={800}
+                    height={600}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* CONTENT */}
+            <div className="flex flex-col items-center md:flex-row md:items-start gap-10">
+              {/* LEFT */}
+              <div className="md:w-2/3 space-y-8 ">
+                <p className="text-gray-500 leading-relaxed text-sm font-light">
+                  Minimal techno is a minimalist subgenre of techno music. It is
+                  characterized by a stripped-down aesthetic that exploits the
+                  use of repetition and understated development. Minimal techno
+                  is thought to have been originally developed in the early
+                  1990s by Detroit-based producers Robert Hood and Daniel Bell.
+                  <br /> Such trends saw the demise of the soul-infused techno
+                  that typified the original Detroit sound. Robert Hood has
+                  noted that he and Daniel Bell both realized something was
+                  missing from techno in the post-rave era. <br /> Design is a
+                  plan or specification for the construction of an object or
+                  system or for the implementation of an activity or process, or
+                  the result of that plan or specification in the form of a
+                  prototype, product, or process. The national agency for
+                  design: enabling Singapore to use design for economic growth
+                  and to make lives better.
+                </p>
+
+                {/* FEATURES */}
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-6">
+                  {features.map((feature, i) => (
+                    <div key={i} className="flex flex-col gap-2 items-center">
+                      <Image
+                        src={feature.icon}
+                        alt={feature.label}
+                        width={36}
+                        height={36}
+                      />
+                      <span className="font-semibold text-[#152C5B]">
+                        {feature.value}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {feature.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* RIGHT */}
+              <div className="md:w-1/3 bg-white rounded-2xl shadow border border-[#E5E5E5] p-10 space-y-6 sticky top-10">
+                <h2 className="text-xl font-semibold text-[#152C5B]">
+                  Start Booking
+                </h2>
+
+                <p className="text-4xl font-bold text-[#1ABC9C]">
+                  ${roomData?.price}
+                  <span className="text-gray-400 text-lg font-normal">
+                    {" "}
+                    / night
+                  </span>
+                </p>
+
+                <p className="text-red-500 font-semibold">
+                  Discount {roomData?.discount}% Off
+                </p>
+
+                {/* DATE */}
+                <div className="relative">
+                  <div
+                    onClick={() => setOpenCalendar(!openCalendar)}
+                    className="flex cursor-pointer bg-gray-100 rounded overflow-hidden"
+                  >
+                    <div className="bg-[#152C5B] p-3">
+                      <Calendar className="text-white" />
+                    </div>
+                    <input
+                      readOnly
+                      value={dateValue}
+                      placeholder="Pick date"
+                      className="w-full px-3 bg-transparent outline-none"
+                    />
+                  </div>
+
+                  {openCalendar && (
+                    <div className="absolute z-20 mt-2">
+                      <DayPicker
+                        mode="range"
+                        selected={range}
+                        onSelect={setRange}
+                        className="bg-white rounded-xl shadow p-4"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* PERSONS */}
+                <div className="flex bg-gray-100 rounded overflow-hidden">
+                  <button
+                    onClick={() => setPersons(Math.max(1, persons - 1))}
+                    className="bg-red-500 p-3"
+                  >
+                    <Minus className="text-white" />
+                  </button>
+                  <input
+                    readOnly
+                    value={`${persons} Person`}
+                    className="w-full text-center bg-transparent"
+                  />
+                  <button
+                    onClick={() => setPersons(persons + 1)}
+                    className="bg-green-500 p-3"
+                  >
+                    <Plus className="text-white" />
+                  </button>
+                </div>
+
+                <p className="text-gray-400 text-sm">
+                  You will pay{" "}
+                  <span className="text-xl font-semibold text-[#152C5B]">
+                    ${finalPrice} USD {""}
+                  </span>
+                  per {""}
+                  <span className="text-xl font-semibold text-[#152C5B]">
+                    {persons} person
+                  </span>
+                </p>
+
+                <button className="w-full bg-[#3252DF] text-white py-3 rounded-lg">
+                  Confirm Booking
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+        <>
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* ===== Rate Section ===== */}
+            <div className="flex-1 flex flex-col gap-3">
+              <h2 className="text-lg font-semibold text-gray-700">Rate</h2>
+              <div className="flex gap-1 text-yellow-400">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-6 h-6 cursor-pointer transition ${
+                      i < rating ? "fill-yellow-400" : "fill-white"
+                    }`}
+                    onClick={() => handleStarClick(i)}
+                  />
+                ))}
+              </div>
+              <textarea
+                className="mt-2 w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Write your rating notes here..."
+                value={textReview}
+                onChange={(e) => setTextReview(e.target.value)}
+              />
+              <button className="mt-4 bg-[#3252DF] text-white py-2 w-3/4 md:w-1/2 cursor-pointer " onClick={handelReview}>Submit</button>
+            </div>
+
+            {/* ===== Comment Section ===== */}
+            <div className="flex-1 flex flex-col gap-3">
+              <h2 className="text-lg font-semibold text-gray-700">
+                Add Your Comment
+              </h2>
+              <textarea
+                className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Write your comment..."
+                value={textComment}
+                onChange={(e) => setTextComment(e.target.value)}
+              />
+              <button className="mt-4 bg-[#3252DF] text-white py-2 w-3/4 md:w-1/2 cursor-pointer" onClick={handelComment}>Submit</button>
+            </div>
+          </div>
+        </>
+      </section>
+      <Footer />
+    </>
+  );
+}

@@ -1,7 +1,16 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',               // البروتوكول اللي الصورة عليه
+        hostname: 'res.cloudinary.com', // فقط الدومين بدون http:// أو https://
+        port: '',                        // عادة فاضي
+        pathname: '/**',                 // أي مسار
+      },
+    ],
+  },
+}
 
-export default nextConfig;
+export default nextConfig
